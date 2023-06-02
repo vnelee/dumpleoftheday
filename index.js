@@ -16,7 +16,7 @@ const db = mysql.createConnection({
 
 const imgHost = 'https://dumpleandfriends-pics.s3.us-east-2.amazonaws.com/';
 const datePattern = /^\d{4}[\-]\d{2}[\-]\d{2}$/;
-const firstDateString = '2023-05-15'; //TODO change this when finalized
+const firstDateString = '2023-06-01';
 
 const getTodayCentral = () => {
   const dateToday = new Date();
@@ -59,7 +59,6 @@ app.get('/imgoftheday', (req, res) => {
   let endDate = req.query.end_date;
 
   if(!startDate && !endDate){
-    console.log('here')
     const todayDate = getTodayCentral();
     console.log(todayDate)
     db.query(`SELECT DATE_FORMAT(dates.date_key, '%Y-%m-%d') as date, CONCAT('${imgHost}', images.url) as url, images.image_caption,
@@ -127,6 +126,7 @@ app.get('/imgoftheday', (req, res) => {
         ON imageCharacter.character_id=characters.character_id
     WHERE dates.date_key BETWEEN ? AND ?
     GROUP BY date
+    ORDER BY date ASC
     LIMIT 35;`,
   [startDate, endDate],
   (err,result) => {
