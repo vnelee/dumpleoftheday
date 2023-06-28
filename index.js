@@ -12,7 +12,7 @@ const db = mysql.createConnection({
   password: process.env.RDS_PASSWORD,
   port: process.env.RDS_PORT,
   database: process.env.RDS_DATABASE
-})
+});
 
 const imgHost = 'https://dumpleandfriends-pics.s3.us-east-2.amazonaws.com/';
 const datePattern = new RegExp(/^\d{4}[\-]\d{2}[\-]\d{2}$/);
@@ -54,29 +54,37 @@ const validateDate = (dateString) => {
  return true;
 };
 
-// /characters - list of character names
 app.get('/characters', (req,res) => {
-  const sqlAllCharactersGet = 'SELECT * FROM characters';
-  // db.query(sqlAllCharactersGet, (err,result) => {
-  //   res.send(result);
-  //   console.log(result);
-  // });
+  db.query(
+    `SELECT * FROM characters;`,
+    (err,result) => {
+      if(err){
+        return res
+          .status(500);
+      }
+      console.log(result);
+      res.send(result);
+    });
 });
 
-// /characters/:id - character name, description
 app.get('/characters/:id', (req, res) => {
-  const {id} = req.params.id;
-  const sqlCharacterGet = 'SELECT * FROM characters WHERE character_id=?';
-  const ret = {};
-  // db.query(sqlCharacterGet, id, (err,result) => {
-  //   console.log(result);
-  // });
+  const id = req.params.id;
+  db.query(
+    `SELECT * FROM characters WHERE character_id='${id}';`,
+    (err,result) => {
+      if(err){
+        return res
+          .status(500);
+      }
+      console.log(result);
+      res.send(result);
+    });
 });
 
 app.get('/imgoftheday', (req, res) => {
   let startDate = req.query.start_date;
   let endDate = req.query.end_date;
-  let character = req.query.character;
+  const character = req.query.character;
   let limit = req.query.limit;
   let offset = req.query.offset;
 
