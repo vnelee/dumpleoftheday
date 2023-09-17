@@ -16,7 +16,7 @@ const db = mysql.createConnection({
 
 const imgHost = 'https://dumpleandfriends-pics.s3.us-east-2.amazonaws.com/';
 const datePattern = new RegExp(/^\d{4}[\-]\d{2}[\-]\d{2}$/);
-const firstDateString = '2023-06-15';
+const firstDateString = '2023-09-15';
 
 const getTodayCentral = () => {
   const dateToday = new Date();
@@ -69,6 +69,13 @@ app.get('/characters', (req,res) => {
 
 app.get('/characters/:id', (req, res) => {
   const id = req.params.id;
+  const characterPattern = new RegExp(/^\d+$/);
+  if(!characterPattern.test(id)){
+    return res
+      .status(400)
+      .send(`Invalid character query.`);
+  }
+
   db.query(
     `SELECT * FROM characters WHERE character_id='${id}';`,
     (err,result) => {
