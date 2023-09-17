@@ -92,8 +92,6 @@ app.get('/imgoftheday', (req, res) => {
   let startDate = req.query.start_date;
   let endDate = req.query.end_date;
   const character = req.query.character;
-  let limit = req.query.limit;
-  let offset = req.query.offset;
 
   if(!startDate && !endDate && !character){
     const todayDate = getTodayCentral();
@@ -164,32 +162,6 @@ app.get('/imgoftheday', (req, res) => {
     }
   }
 
-  if(!limit){
-    limit = 35;
-  } else {
-    const limPattern = new RegExp(/^\d+$/);
-    if(!limPattern.test(limit)){
-      return res
-        .status(400)
-        .send(`Invalid limit.`);
-    } else if(limit > 100){
-      return res
-        .status(400)
-        .send(`Invalid limit. Maximum limit is 100.`);
-    }
-  }
-
-  if(!offset){
-    offset = 0;
-  } else {
-    const offsetPattern = new RegExp(/^\d+$/);
-    if(!offsetPattern.test(limit)){
-      return res
-        .status(400)
-        .send(`Invalid offset.`);
-    } 
-  }
-
   db.query(
     `SELECT
       DATE_FORMAT(dates.date_key, '%Y-%m-%d') as date,
@@ -206,8 +178,7 @@ app.get('/imgoftheday', (req, res) => {
       `AND images.image_id IN (SELECT image_id FROM imageCharacter WHERE imageCharacter.character_id IN (${character}))`
     : ''}
     GROUP BY date
-    ORDER BY date ASC
-    LIMIT ${limit} OFFSET ${offset};`,
+    ORDER BY date ASC;`,
     (err,result) => {
       if(err){
         return res
