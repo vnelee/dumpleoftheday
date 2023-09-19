@@ -54,6 +54,12 @@ const validateDate = (dateString) => {
  return true;
 };
 
+app.get('/', (req,res) => {
+  return res
+    .status(200)
+    .send('Welcome to the dumpleoftheday API! To get started/learn more, visit the GitHub repo/docs at https://github.com/vnelee/dumpleoftheday :)')
+})
+
 app.get('/characters', (req,res) => {
   db.query(
     `SELECT * FROM characters;`,
