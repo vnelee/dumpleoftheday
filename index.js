@@ -1,9 +1,12 @@
+/********** Load modules and setup app **********/
+
 const express = require('express');
-const app = express();
 const cors = require('cors');
 const mysql = require('mysql2');
+const serverless = require('serverless-http')
 require('dotenv').config();
 
+const app = express();
 app.use(cors());
 
 const db = mysql.createConnection({
@@ -14,24 +17,53 @@ const db = mysql.createConnection({
   database: process.env.RDS_DATABASE
 });
 
-const imgHost = 'https://dumpleandfriends-pics.s3.us-east-2.amazonaws.com/';
-const datePattern = new RegExp(/^\d{4}[\-]\d{2}[\-]\d{2}$/);
-const firstDateString = '2023-09-15';
 
+/********** Global variables **********/
+
+const imgHost = 'https://dumpleandfriends-pics.s3.us-east-2.amazonaws.com/'; // base url for images
+const datePattern = new RegExp(/^\d{4}[\-]\d{2}[\-]\d{2}$/); // regex to check for YYYY-MM-DD pattern
+const firstDateString = '2023-09-15'; // Earliest valid date
+
+
+/********** Helper functions **********/
+
+/**
+ * Function: getTodayCentral()
+ *
+ * Description: Get the current date in the US Central Time Zone
+ * Assumptions: None
+ * 
+ * Input values: None
+ * Return values: String in 'YYYY-MM-DD' format
+ *
+ */
 const getTodayCentral = () => {
   const dateToday = new Date();
 
-  // todayCentralArr is in ['DD', 'MM', 'YYYY'] format.
   // Using en-GB rather than en-US takes care of
   // including leading zeros for single digit month/days.
   const todayCentralArr = dateToday.toLocaleDateString('en-GB', {timeZone: 'America/Chicago'}).split('/');
+
+  // todayCentralArr is in ['DD', 'MM', 'YYYY'] format
   const todayCentral = todayCentralArr.reverse().join('-');
+
   return todayCentral;
 };
 
+/**
+ * Function: validateDate()
+ *
+ * Description: Determines if the given date is valid
+ * Assumptions: Input has already been verified for proper 'YYYY-MM-DD'
+ *              formatting before this function is called
+ * 
+ * Input values: String in 'YYYY-MM-DD' format
+ * Return values: Bool - true = valid, false = not valid
+ *
+ */
 const validateDate = (dateString) => {
 
-  // Does the date make no sense
+  // Is it not a real calendar date
   if(isNaN(Date.parse(dateString))){
     return false;
   }
@@ -54,11 +86,25 @@ const validateDate = (dateString) => {
  return true;
 };
 
+
+/********** API Endpoints **********/
+/* See docs on README.md for details */
+
+/**
+ * Root endpoint
+ * Returns welcome message pointing to docs
+ */
+
 app.get('/', (req,res) => {
   return res
     .status(200)
     .send('Welcome to the dumpleoftheday API! To get started/learn more, visit the GitHub repo/docs at https://github.com/vnelee/dumpleoftheday :)')
 })
+
+/**
+ * Character endpoints
+ * Returns data related to characters
+ */
 
 app.get('/characters', (req,res) => {
   db.query(
@@ -94,11 +140,17 @@ app.get('/characters/:id', (req, res) => {
     });
 });
 
+/**
+ * Date endpoints
+ * Returns data related to the image(s) from certain date(s)
+ */
+
 app.get('/imgoftheday', (req, res) => {
   let startDate = req.query.start_date;
   let endDate = req.query.end_date;
   const character = req.query.character;
 
+  // No parameters - get today's image
   if(!startDate && !endDate && !character){
     const todayDate = getTodayCentral();
 
@@ -125,6 +177,8 @@ app.get('/imgoftheday', (req, res) => {
     return;
   }
 
+  // Set or validate start and end of date range to search through
+
   if(!startDate){
     startDate = firstDateString;
   }
@@ -134,7 +188,7 @@ app.get('/imgoftheday', (req, res) => {
         .status(400)
         .send('Invalid date. Date must be in YYYY-MM-DD format.');
     }
-    validDate = validateDate(startDate);
+    const validDate = validateDate(startDate);
     if(!validDate){
       return res
         .status(400)
@@ -151,7 +205,7 @@ app.get('/imgoftheday', (req, res) => {
         .status(400)
         .send('Invalid date. Date must be in YYYY-MM-DD format.');
     }
-    validDate = validateDate(endDate);
+    const validDate = validateDate(endDate);
     if(!validDate){
       return res
         .status(400)
@@ -160,6 +214,8 @@ app.get('/imgoftheday', (req, res) => {
   }
 
   if(character){
+    // Character parameter can be one positive integer
+    // or multiple positive integers separated by commas
     const characterPattern = new RegExp(/^\d+[,\d+]+|^\d+$/);
     if(!characterPattern.test(character)){
       return res
@@ -232,7 +288,15 @@ app.get('/imgoftheday/:date', (req, res) => {
   return;
 });
 
-app.listen(3000, () => {
-  console.log('running');
-});
 
+/********** Export (AWS Lambda) or connect to port (local) **********/
+
+if(process.env.ENVIRONMENT === 'lambda'){
+  module.exports.handler = serverless(app)
+}
+else{
+  const PORT = 3000;
+  app.listen(PORT, () => {
+    console.log(`Running on port ${PORT}`);
+  });
+}
