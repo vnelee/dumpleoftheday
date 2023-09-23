@@ -1,7 +1,7 @@
 # dumpleoftheday
 dumpleoftheday is an “image of the day” API featuring plushie characters from the instagram account [@dumpleandfriends](https://www.instagram.com/dumpleandfriends/). Give us a follow! ;)
 
-The API is built with Express and uses a MySQL backend. It was deployed with AWS Lambda and API Gateway, and can be called using the base URL (TODO ADD URL HERE).
+The API is built with Express and uses a MySQL backend. It was deployed with AWS Lambda and API Gateway, and can be called using the base URL https://hbe2i3nu5e.execute-api.us-east-2.amazonaws.com/.
 
 This project was inspired by the [NASA Astronomy Picture of the Day (APOD) API](https://github.com/nasa/apod-api).
 
@@ -43,10 +43,19 @@ Parameters are not to be used with the `date` attribute (they will be ignored).
 <summary>Example: specific date</summary>
 <br>
 Request
-<pre>request</pre>
+<pre>https://hbe2i3nu5e.execute-api.us-east-2.amazonaws.com/imgoftheday/2023-09-16</pre>
 <br>
 Return
-<pre>response</pre>
+<pre>
+<code class='language-json'>[
+  {
+    "date": "2023-09-16",
+    "url": "https://dumpleandfriends-pics.s3.us-east-2.amazonaws.com/img_0688.jpg",
+    "image_caption": "Willie is a smart, intelligent dolphin who touches grass. Here he's enjoying the sun while reading a book at the park.",
+    "characters": [{"character_id":2,"character_name":"Willie"}]
+  }
+]</code>
+</pre>
 </details>
 <br>
 
@@ -54,21 +63,10 @@ Return
 <summary>Example: end_date</summary>
 <br>
 Request
-<pre>request</pre>
+<pre>https://hbe2i3nu5e.execute-api.us-east-2.amazonaws.com/imgoftheday?end_date=2023-09-17</pre>
 <br>
 Return
-<pre>response</pre>
-</details>
-<br>
-
-<details>
-<summary>Example: character</summary>
-<br>
-Request
-<pre>request</pre>
-<br>
-Return
-<pre>response</pre>
+<pre>[{"date":"2023-09-15","url":"https://dumpleandfriends-pics.s3.us-east-2.amazonaws.com/img_0696.jpg","image_caption":"This is Dumple Senior. He's a fluffy and cute dolphin who likes hugs and meat dumples!","characters":[{"character_id":1,"character_name":"Dumple"}]},{"date":"2023-09-16","url":"https://dumpleandfriends-pics.s3.us-east-2.amazonaws.com/img_0688.jpg","image_caption":"Willie is a smart, intelligent dolphin who touches grass. Here he's enjoying the sun while reading a book at the park.","characters":[{"character_id":2,"character_name":"Willie"}]},{"date":"2023-09-17","url":"https://dumpleandfriends-pics.s3.us-east-2.amazonaws.com/img_0694.jpg","image_caption":"Siu bang, Jaws, and Willie in deep discussion. What might they be talking about?","characters":[{"character_id":2,"character_name":"Willie"},{"character_id":7,"character_name":"Siu Bang"},{"character_id":8,"character_name":"Jaws"}]}]</pre>
 </details>
 <br>
 
@@ -76,7 +74,7 @@ Return
 <summary>Example: multiple parameters</summary>
 <br>
 Request
-<pre>request</pre>
+<pre>https://hbe2i3nu5e.execute-api.us-east-2.amazonaws.com/imgoftheday?start_date=2023-09-16&end_date=2023-09-23&character=2,11</pre>
 <br>
 Return
 <pre>response</pre>
