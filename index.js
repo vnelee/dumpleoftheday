@@ -122,6 +122,7 @@ app.get('/characters', (req, res) => {
         .status(200)  
         .send(result);
     });
+  return;
 });
 
 app.get('/characters/:id', (req, res) => {
@@ -147,6 +148,7 @@ app.get('/characters/:id', (req, res) => {
         .status(200)
         .send(result);
     });
+  return;
 });
 
 /**
@@ -186,6 +188,7 @@ app.get('/imgoftheday', (req, res) => {
           .status(200)
           .send(result);
       });
+    return;
   }
 
   // Set or validate start and end of date range to search through
@@ -268,6 +271,7 @@ app.get('/imgoftheday', (req, res) => {
         .status(200)
         .send(result);
     });
+  return;
 });
 
 app.get('/imgoftheday/:date', (req, res) => {
@@ -307,6 +311,7 @@ app.get('/imgoftheday/:date', (req, res) => {
         .status(200)
         .send(result);
     });
+  return;
 });
 
 
