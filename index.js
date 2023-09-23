@@ -1,9 +1,12 @@
+/********** Load modules and setup app **********/
+
 const express = require('express');
-const app = express();
 const cors = require('cors');
 const mysql = require('mysql2');
+const serverless = require('serverless-http');
 require('dotenv').config();
 
+const app = express();
 app.use(cors());
 
 const db = mysql.createConnection({
@@ -11,28 +14,56 @@ const db = mysql.createConnection({
   user: process.env.RDS_USERNAME,
   password: process.env.RDS_PASSWORD,
   port: process.env.RDS_PORT,
-  database: process.env.RDS_DATABASE
+  database: process.env.RDS_DATABASE,
 });
 
-const imgHost = 'https://dumpleandfriends-pics.s3.us-east-2.amazonaws.com/';
-const datePattern = new RegExp(/^\d{4}[\-]\d{2}[\-]\d{2}$/);
-const firstDateString = '2023-09-15';
 
+/********** Global variables **********/
+
+const imgHost = 'https://dumpleandfriends-pics.s3.us-east-2.amazonaws.com/'; // Base url for images
+const datePattern = new RegExp(/^\d{4}[\-]\d{2}[\-]\d{2}$/); // Regex to check for YYYY-MM-DD date pattern
+const firstDateString = '2023-09-15'; // Earliest valid date
+
+
+/********** Helper functions **********/
+
+/**
+ * @function getTodayCentral()
+ *
+ * @description Get the current date in the US Central Time Zone.
+ * Assumptions: None
+ * 
+ * @return {string} Date in 'YYYY-MM-DD' format
+ *
+ */
 const getTodayCentral = () => {
   const dateToday = new Date();
 
-  // todayCentralArr is in ['DD', 'MM', 'YYYY'] format.
   // Using en-GB rather than en-US takes care of
   // including leading zeros for single digit month/days.
   const todayCentralArr = dateToday.toLocaleDateString('en-GB', {timeZone: 'America/Chicago'}).split('/');
+
+  // todayCentralArr is in ['DD', 'MM', 'YYYY'] format
   const todayCentral = todayCentralArr.reverse().join('-');
+
   return todayCentral;
 };
 
+/**
+ * @function validateDate()
+ *
+ * @description Determines if the given date is valid.
+ * Assumptions: Input has already been verified for proper 'YYYY-MM-DD'
+ *              formatting before this function is called
+ * 
+ * @param {string} Date in 'YYYY-MM-DD' format
+ * @return {bool} true = valid, false = not valid
+ *
+ */
 const validateDate = (dateString) => {
 
-  // Does the date make no sense
-  if(isNaN(Date.parse(dateString))){
+  // Is it not a real calendar date
+  if(isNaN(Date.parse(dateString))) {
     return false;
   }
 
@@ -40,43 +71,64 @@ const validateDate = (dateString) => {
 
   // Is it before the first date
   const firstDate = new Date(firstDateString);
-  if(inputDate < firstDate){
+
+  if(inputDate < firstDate) {
     return false;
   }
 
   // Is it after today
   const todayCentral = getTodayCentral();
   const todayCentralDate = new Date(todayCentral);
-  if(inputDate > todayCentralDate){
+
+  if(inputDate > todayCentralDate) {
     return false;
   }
 
- return true;
+  return true;
 };
 
-app.get('/', (req,res) => {
+
+/********** API Endpoints **********/
+/* See docs on README.md for details */
+
+/**
+ * Root endpoint
+ * Returns welcome message pointing to docs
+ */
+
+app.get('/', (req, res) => {
   return res
     .status(200)
-    .send('Welcome to the dumpleoftheday API! To get started/learn more, visit the GitHub repo/docs at https://github.com/vnelee/dumpleoftheday :)')
-})
+    .send('Welcome to the dumpleoftheday API! To get started/learn more, ' +
+          'visit the GitHub repo/docs at https://github.com/vnelee/dumpleoftheday :)');
+});
 
-app.get('/characters', (req,res) => {
+/**
+ * Character endpoints
+ * Returns data related to characters
+ */
+
+app.get('/characters', (req, res) => {
   db.query(
     `SELECT * FROM characters;`,
-    (err,result) => {
-      if(err){
+    (err, result) => {
+      if(err) {
         return res
-          .status(500);
+          .status(500)
+          .send('Internal error.');
       }
       console.log(result);
-      res.send(result);
+      return res
+        .status(200)  
+        .send(result);
     });
 });
 
 app.get('/characters/:id', (req, res) => {
   const id = req.params.id;
   const characterPattern = new RegExp(/^\d+$/);
-  if(!characterPattern.test(id)){
+
+  if(!characterPattern.test(id)) {
     return res
       .status(400)
       .send(`Invalid character query.`);
@@ -84,22 +136,31 @@ app.get('/characters/:id', (req, res) => {
 
   db.query(
     `SELECT * FROM characters WHERE character_id='${id}';`,
-    (err,result) => {
-      if(err){
+    (err, result) => {
+      if(err) {
         return res
-          .status(500);
+          .status(500)
+          .send('Internal error.');
       }
       console.log(result);
-      res.send(result);
+      return res
+        .status(200)
+        .send(result);
     });
 });
+
+/**
+ * Date endpoints
+ * Returns data related to the image(s) from certain date(s)
+ */
 
 app.get('/imgoftheday', (req, res) => {
   let startDate = req.query.start_date;
   let endDate = req.query.end_date;
   const character = req.query.character;
 
-  if(!startDate && !endDate && !character){
+  // No parameters - get today's image
+  if(!startDate && !endDate && !character) {
     const todayDate = getTodayCentral();
 
     db.query(
@@ -114,54 +175,65 @@ app.get('/imgoftheday', (req, res) => {
         INNER JOIN imageCharacter ON images.image_id=imageCharacter.image_id
         INNER JOIN characters ON imageCharacter.character_id=characters.character_id
       WHERE dates.date_key='${todayDate}';`,
-      (err,result) => {
-        if(err){
+      (err, result) => {
+        if(err) {
           return res
-            .status(500);
+            .status(500)
+            .send('Internal error.');
         }
         console.log(result);
-        res.send(result);
+        return res
+          .status(200)
+          .send(result);
       });
-    return;
   }
 
-  if(!startDate){
+  // Set or validate start and end of date range to search through
+
+  if(!startDate) {
     startDate = firstDateString;
   }
   else {
-    if(!datePattern.test(startDate)){
+    if(!datePattern.test(startDate)) {
       return res
         .status(400)
         .send('Invalid date. Date must be in YYYY-MM-DD format.');
     }
-    validDate = validateDate(startDate);
-    if(!validDate){
+
+    const validDate = validateDate(startDate);
+
+    if(!validDate) {
       return res
         .status(400)
         .send(`Invalid date. Date must be between ${firstDateString} and ${getTodayCentral()}`);
     }
   }
 
-  if(!endDate){
+  if(!endDate) {
     endDate = getTodayCentral();
   }
   else {
-    if(!datePattern.test(endDate)){
+    if(!datePattern.test(endDate)) {
       return res
         .status(400)
         .send('Invalid date. Date must be in YYYY-MM-DD format.');
     }
-    validDate = validateDate(endDate);
-    if(!validDate){
+
+    const validDate = validateDate(endDate);
+
+    if(!validDate) {
       return res
         .status(400)
         .send(`Invalid date. Date must be between ${firstDateString} and ${getTodayCentral()}`);
     }
   }
 
-  if(character){
+  if(character) {
+    // Character parameter can be one positive integer
+    // or multiple positive integers separated by commas
     const characterPattern = new RegExp(/^\d+[,\d+]+|^\d+$/);
-    if(!characterPattern.test(character)){
+
+    if(!characterPattern.test(character)) {
       return res
         .status(400)
         .send(`Invalid character query.`);
@@ -185,25 +257,28 @@ app.get('/imgoftheday', (req, res) => {
     : ''}
     GROUP BY date
     ORDER BY date ASC;`,
-    (err,result) => {
-      if(err){
+    (err, result) => {
+      if(err) {
         return res
-          .status(500);
+          .status(500)
+          .send('Internal error.');
       }
       console.log(result);
-      res.send(result);
+      return res
+        .status(200)
+        .send(result);
     });
-  return;
 });
 
 app.get('/imgoftheday/:date', (req, res) => {
   const dateString = req.params.date;
-  if(!datePattern.test(dateString)){
+
+  if(!datePattern.test(dateString)) {
     return res
       .status(400)
       .send('Invalid date. Date must be in YYYY-MM-DD format.');
   }
-  if(!validateDate(dateString)){
+  if(!validateDate(dateString)) {
     return res
       .status(400)
       .send(`Invalid date. Date must be between ${firstDateString} and ${getTodayCentral()}`);
@@ -221,18 +296,28 @@ app.get('/imgoftheday/:date', (req, res) => {
       INNER JOIN imageCharacter ON images.image_id=imageCharacter.image_id
       INNER JOIN characters ON imageCharacter.character_id=characters.character_id
     WHERE dates.date_key='${dateString}';`,
-    (err,result) => {
-      if(err){
+    (err, result) => {
+      if(err) {
         return res
-          .status(500);
+          .status(500)
+          .send('Internal error.');
       }
       console.log(result);
-      res.send(result);
+      return res
+        .status(200)
+        .send(result);
     });
-  return;
 });
 
-app.listen(3000, () => {
-  console.log('running');
-});
 
+/********** Export (AWS Lambda) or connect to port (local) **********/
+
+if(process.env.ENVIRONMENT === 'lambda') {
+  module.exports.handler = serverless(app);
+}
+else {
+  const PORT = 3000;
+  app.listen(PORT, () => {
+    console.log(`Running on port ${PORT}`);
+  });
+}
