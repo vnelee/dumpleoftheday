@@ -96,7 +96,7 @@ const validateDate = (dateString) => {
  * Returns welcome message pointing to docs
  */
 
-app.get('/', (req,res) => {
+app.get('/', (req, res) => {
   return res
     .status(200)
     .send('Welcome to the dumpleoftheday API! To get started/learn more, ' +
@@ -108,10 +108,10 @@ app.get('/', (req,res) => {
  * Returns data related to characters
  */
 
-app.get('/characters', (req,res) => {
+app.get('/characters', (req, res) => {
   db.query(
     `SELECT * FROM characters;`,
-    (err,result) => {
+    (err, result) => {
       if(err) {
         return res
           .status(500)
@@ -175,7 +175,7 @@ app.get('/imgoftheday', (req, res) => {
         INNER JOIN imageCharacter ON images.image_id=imageCharacter.image_id
         INNER JOIN characters ON imageCharacter.character_id=characters.character_id
       WHERE dates.date_key='${todayDate}';`,
-      (err,result) => {
+      (err, result) => {
         if(err) {
           return res
             .status(500)
@@ -257,7 +257,7 @@ app.get('/imgoftheday', (req, res) => {
     : ''}
     GROUP BY date
     ORDER BY date ASC;`,
-    (err,result) => {
+    (err, result) => {
       if(err) {
         return res
           .status(500)
@@ -296,7 +296,7 @@ app.get('/imgoftheday/:date', (req, res) => {
       INNER JOIN imageCharacter ON images.image_id=imageCharacter.image_id
       INNER JOIN characters ON imageCharacter.character_id=characters.character_id
     WHERE dates.date_key='${dateString}';`,
-    (err,result) => {
+    (err, result) => {
       if(err) {
         return res
           .status(500)
