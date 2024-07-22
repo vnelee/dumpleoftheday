@@ -1,7 +1,7 @@
 # dumpleoftheday
 dumpleoftheday is an “image of the day” API featuring plushie characters from the instagram account [@dumpleandfriends](https://www.instagram.com/dumpleandfriends/). Give us a follow! ;)
 
-The API is built with Express and uses a MySQL backend. It was deployed with AWS Lambda and API Gateway, and can be called using the base URL https://hbe2i3nu5e.execute-api.us-east-2.amazonaws.com/.
+The API is built with Node.js and Express, and uses MariaDB for the database. Previously it used Amazon RDS for MySQL, and was deployed with AWS Lambda and API Gateway. The API is now self-hosted and can be called using the base URL https://dumpleapi.williewillus.net/.
 
 This project was inspired by the [NASA Astronomy Picture of the Day (APOD) API](https://github.com/nasa/apod-api).
 
