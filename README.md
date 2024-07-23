@@ -43,7 +43,7 @@ Parameters are not to be used with the `date` attribute (they will be ignored).
 <summary>Example: specific date</summary>
 <br>
 Request
-<pre><code>https://hbe2i3nu5e.execute-api.us-east-2.amazonaws.com/imgoftheday/2023-09-16</code></pre>
+<pre><code>https://dumpleapi.williewillus.net/imgoftheday/2023-09-16</code></pre>
 <br>
 Response
 <pre>
@@ -66,7 +66,7 @@ Response
 <summary>Example: end_date</summary>
 <br>
 Request
-<pre><code>https://hbe2i3nu5e.execute-api.us-east-2.amazonaws.com/imgoftheday?end_date=2023-09-17</code></pre>
+<pre><code>https://dumpleapi.williewillus.net/imgoftheday?end_date=2023-09-17</code></pre>
 <br>
 Response
 <pre><code class='language-json'>[
@@ -107,7 +107,7 @@ Response
 <summary>Example: multiple parameters</summary>
 <br>
 Request
-<pre><code>https://hbe2i3nu5e.execute-api.us-east-2.amazonaws.com/imgoftheday?start_date=2023-09-17&end_date=2023-09-23&character=2,11</code></pre>
+<pre><code>https://dumpleapi.williewillus.net/imgoftheday?start_date=2023-09-17&end_date=2023-09-23&character=2,11</code></pre>
 <br>
 Response
 <pre><code class='language-json'>[
@@ -163,7 +163,7 @@ Calling this endpoint without any attributes returns an array of all characters 
 <summary>Example: specific character</summary>
 <br>
 Request
-<pre><code>https://hbe2i3nu5e.execute-api.us-east-2.amazonaws.com/characters/1</code></pre>
+<pre><code>https://dumpleapi.williewillus.net/characters/1</code></pre>
 <br>
 Repsonse
 <pre><code class='language-json'>[
