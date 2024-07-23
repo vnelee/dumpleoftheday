@@ -163,32 +163,8 @@ app.get('/imgoftheday', (req, res) => {
 
   // No parameters - get today's image
   if(!startDate && !endDate && !character) {
-    const todayDate = getTodayCentral();
-
-    db.query(
-      `SELECT
-        DATE_FORMAT(dates.date_key, '%Y-%m-%d') as date,
-        CONCAT('${imgHost}', images.url) as url,
-        images.image_caption,
-        JSON_ARRAYAGG(JSON_OBJECT('character_id', characters.character_id,
-                                  'character_name', characters.character_name)) as characters
-      FROM dates
-        INNER JOIN images ON images.image_id=dates.image_id
-        INNER JOIN imageCharacter ON images.image_id=imageCharacter.image_id
-        INNER JOIN characters ON imageCharacter.character_id=characters.character_id
-      WHERE dates.date_key='${todayDate}';`,
-      (err, result) => {
-        if(err) {
-          return res
-            .status(500)
-            .send('Internal error.');
-        }
-        console.log(result);
-        return res
-          .status(200)
-          .send(result);
-      });
-    return;
+    startDate = getTodayCentral();
+    endDate = startDate;
   }
 
   // Set or validate start and end of date range to search through
@@ -266,10 +242,17 @@ app.get('/imgoftheday', (req, res) => {
           .status(500)
           .send('Internal error.');
       }
-      console.log(result);
+      const resultToSend = Object.keys(result).map(key => {
+        let data = result[key];
+        if(data.characters) {
+          data.characters = JSON.parse(data.characters);
+        }
+        return data;
+      });
+      console.log(resultToSend);
       return res
         .status(200)
-        .send(result);
+        .send(resultToSend);
     });
   return;
 });
@@ -306,10 +289,17 @@ app.get('/imgoftheday/:date', (req, res) => {
           .status(500)
           .send('Internal error.');
       }
-      console.log(result);
+      const resultToSend = Object.keys(result).map(key => {
+        let data = result[key];
+        if(data.characters) {
+          data.characters = JSON.parse(data.characters);
+        }
+        return data;
+      });
+      console.log(resultToSend);
       return res
         .status(200)
-        .send(result);
+        .send(resultToSend);
     });
   return;
 });
