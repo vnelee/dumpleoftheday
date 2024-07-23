@@ -242,10 +242,17 @@ app.get('/imgoftheday', (req, res) => {
           .status(500)
           .send('Internal error.');
       }
-      console.log(result);
+      const resultToSend = Object.keys(result).map(key => {
+        let data = result[key];
+        if(data.characters) {
+          data.characters = JSON.parse(data.characters);
+        }
+        return data;
+      });
+      console.log(resultToSend);
       return res
         .status(200)
-        .send(result);
+        .send(resultToSend);
     });
   return;
 });
@@ -282,10 +289,17 @@ app.get('/imgoftheday/:date', (req, res) => {
           .status(500)
           .send('Internal error.');
       }
-      console.log(result);
+      const resultToSend = Object.keys(result).map(key => {
+        let data = result[key];
+        if(data.characters) {
+          data.characters = JSON.parse(data.characters);
+        }
+        return data;
+      });
+      console.log(resultToSend);
       return res
         .status(200)
-        .send(result);
+        .send(resultToSend);
     });
   return;
 });
